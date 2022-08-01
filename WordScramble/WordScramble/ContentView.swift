@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var score = 0
     
     var body: some View {
         NavigationView {
@@ -32,15 +33,46 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle(rootWord)
+            .background(Color.blue)
+//            .navigationTitle(rootWord)
             .onSubmit(addNewWord)
             .onAppear(perform: startGame)
             .alert(errorTitle, isPresented: $showingError) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage)
+            }.toolbar {
+                Button("New Game", action: startGame)
+            }.safeAreaInset(edge: .top) {
+                Text(rootWord)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(.blue)
+                    .foregroundColor(.white)
+                    .font(.title)
+            }
+            .safeAreaInset(edge: .bottom) {
+                Text("Score: \(score)")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(.blue)
+                    .foregroundColor(.white)
+                    .font(.title)
             }
         }
+    }
+    
+    func startGame() {
+        score = 0
+        if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
+            if let startWords = try? String(contentsOf: startWordsURL) {
+                let allWords = startWords.components(separatedBy: "\n")
+                rootWord = allWords.randomElement() ?? "silkworm"
+                return
+            }
+        }
+
+        fatalError("Could not load start.txt from bundle.")
     }
     
     func addNewWord() {
@@ -67,18 +99,7 @@ struct ContentView: View {
         }
 
         newWord = ""
-    }
-    
-    func startGame() {
-        if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
-            if let startWords = try? String(contentsOf: startWordsURL) {
-                let allWords = startWords.components(separatedBy: "\n")
-                rootWord = allWords.randomElement() ?? "silkworm"
-                return
-            }
-        }
-
-        fatalError("Could not load start.txt from bundle.")
+        score += answer.count
     }
     
     func isOriginal(word: String) -> Bool {
